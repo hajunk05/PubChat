@@ -17,7 +17,10 @@ public class UserController {
   private UserRepository userRepository;
 
   @PostMapping("/api/signup")
-  public ResponseEntity<User> createUser(@RequestBody User user) {
+  public ResponseEntity createUser(@RequestBody User user) {
+    if (userRepository.findFirstByUsername(user.getUsername()) != null) {
+      return ResponseEntity.badRequest().body("User Already Exists");
+    }
     User savedUser = userRepository.save(user);
     return ResponseEntity.ok(savedUser);
   }

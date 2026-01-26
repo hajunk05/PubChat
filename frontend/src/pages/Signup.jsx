@@ -1,10 +1,23 @@
 import { useState } from "react";
 import axios from "axios";
+import {useNavigate} from "react-router";
 
 const Signup = ({ setUser }) => {
 
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
+    const [isInvalid, setIsInvalid] = useState(false);
+    const [invalidMessage, setInvalidMessage] = useState('');
+
+    const navigate = useNavigate();
+
+    const showMessage = () => {
+        setIsInvalid(true);
+
+        setTimeout(() => {
+            setIsInvalid(false);
+        }, 1500)
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -16,8 +29,10 @@ const Signup = ({ setUser }) => {
 
         axios.post('/api/signup', newUser).then(res => {
             setUser(res.data);
+            navigate('/')
         }).catch(e => {
-            console.error(e)
+            setInvalidMessage(e.response.data);
+            showMessage();
         })
 
         setName('')
@@ -35,6 +50,7 @@ const Signup = ({ setUser }) => {
                     </label>
                     <button type="submit"> Register </button>
                 </form>
+                {isInvalid && <p style={{ color: 'red' }}> {invalidMessage} </p>}
             </div>
         </>
     )

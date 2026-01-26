@@ -6,16 +6,28 @@ const Login = ({ setUser }) => {
 
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
+    const [isInvalid, setIsInvalid] = useState(false);
+    const [invalidMessage, setInvalidMessage] = useState('');
 
     const navigate = useNavigate()
+
+    const showMessage = () => {
+        setIsInvalid(true);
+
+        setTimeout(() => {
+            setIsInvalid(false);
+        }, 1500)
+    }
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
         axios.post(`/api/login?username=${name}&password=${password}`).then(res => {
             setUser(res.data);
             navigate('/')
-        }).catch((e) => {
-            window.alert(e.response.data);
+        }).catch(e => {
+            setInvalidMessage(e.response.data);
+            showMessage();
         })
 
 
@@ -35,6 +47,7 @@ const Login = ({ setUser }) => {
                     </label>
                     <button type="submit"> Login </button>
                 </form>
+                {isInvalid && <p style={{ color: 'red' }}> {invalidMessage} </p>}
             </div>
         </>
     )
