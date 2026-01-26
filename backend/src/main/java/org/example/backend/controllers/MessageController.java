@@ -15,13 +15,13 @@ public class MessageController {
   @Autowired
   private MessageRepository messageRepository;
 
-  @PostMapping("/messages")
+  @PostMapping("/api/messages")
   public ResponseEntity<Message> createMessage(@RequestBody Message message) {
     Message savedMessage = messageRepository.save(message);
     return ResponseEntity.ok(savedMessage);
   }
 
-  @GetMapping("/messages")
+  @GetMapping("/api/messages")
   public ResponseEntity<List<Message>> getAllMessages() {
     return ResponseEntity.ok(messageRepository.findAll());
   }
