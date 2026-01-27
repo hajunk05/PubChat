@@ -42,7 +42,7 @@ const Login = ({ setUser }) => {
                 <form onSubmit={handleSubmit}>
                     <label> Name: <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
                     </label>
-                    <label> Password: <input type="text" value={password}
+                    <label> Password: <input type="password" value={password}
                                              onChange={(e) => setPassword(e.target.value)}/>
                     </label>
                     <button type="submit"> Login </button>
