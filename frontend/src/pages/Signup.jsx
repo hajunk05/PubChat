@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import {useNavigate} from "react-router";
+import "./Auth.css";
 
 const Signup = ({ setUser }) => {
 
@@ -40,21 +41,22 @@ const Signup = ({ setUser }) => {
     }
 
     return (
-        <>
-            <div>
-                <h1> Sign up </h1>
-                <form onSubmit={handleSubmit}>
-                    <label> Name: <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
+        <div className="auth-wrapper">
+            <div className="auth-card">
+                <h1>Sign Up</h1>
+                <form className="auth-form" onSubmit={handleSubmit}>
+                    <label> Name:
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
                     </label>
-                    <label> Password: <input type="password" value={password}
-                                             onChange={(e) => setPassword(e.target.value)} />
+                    <label> Password:
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
                     </label>
-                    <button type="submit"> Register</button>
+                    <button className="auth-button" type="submit">Register</button>
                 </form>
                 <small> (Please do not use your real password) </small>
-                {isInvalid && <p style={{color: 'red'}}> {invalidMessage} </p>}
+                {isInvalid && <p className="error-text">{invalidMessage}</p>}
             </div>
-        </>
+        </div>
     )
 
 }

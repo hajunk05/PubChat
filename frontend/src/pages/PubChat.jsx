@@ -1,13 +1,20 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState, useRef } from "react";
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 import axios from "axios";
+import "./PubChat.css"
 
 
 const PubChat = ({ user }) => {
 
     const [messages, setMessages] = useState([])
     const [messageInput, setMessageInput] = useState('');
+
+    const messagesEndRef = useRef(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth"});
+    };
 
     const sendMessage = async (e) => {
         e.preventDefault();
@@ -27,6 +34,10 @@ const PubChat = ({ user }) => {
     }
 
     useEffect(() => {
+        scrollToBottom();
+    }, [messages])
+
+    useEffect(() => {
         axios.get('/api/messages').then(res => {
             setMessages(res.data);
         }).catch(err => console.error("Could not load history", err));
@@ -43,8 +54,9 @@ const PubChat = ({ user }) => {
                 console.log("new message", newMessage)
 
                 setMessages((prev) => {
-                    const exists = prev.find(m => m.id === newMessage.id);
-                    return exists ? prev : [...prev, newMessage];
+                    if (prev.find(m => m.id === newMessage.id)) return prev;
+                    const updated = [...prev, newMessage];
+                    return updated.slice(-25);
                 })
             })
         })
@@ -59,28 +71,31 @@ const PubChat = ({ user }) => {
     return (
         <>
             <h1> Welcome, {user ? user.username : "please sign up or log in to access the chat"}. </h1>
-            <div style={{ border: '2px solid black', padding: '10px' }}>
-                {user && messages && messages.map((m) => {
-                    const isMine = user && m.userId === user.username
 
-                    return (
-                        <div key={m.id} style={{
-                            alignSelf: isMine ? 'flex-end' : 'flex-start'
-                        }}>
-                            <small> {m.userId}: </small>
-                            {m.messageContent}
-                        </div> )
-                })}
-            </div>
-            {user && (
-                <form onSubmit={sendMessage}>
-                    <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)}
-                        placeholder="Type a message..."
-                    />
-                    <button type="submit"> Send </button>
-                </form>
+            <div className={`chat-container ${!user ? 'chat-blurred' : ''}`} >
+                <div className="chat-window">
+                    {messages.map((m) => {
+                        const isMine = user && m.userId === user.username
+
+                        return (
+                            <div key={m.id} className={`message-bubble ${isMine ? 'message-right' : 'message-left'}`}>
+                                <small> {m.userId}: </small>
+                                {m.messageContent}
+                            </div> )
+                    })}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {user && (
+                    <form className="chat-form" onSubmit={sendMessage}>
+                        <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)}
+                               placeholder="Type a message..."
+                        />
+                        <button type="submit"> Send </button>
+                    </form>
                 )
-            }
+                }
+            </div>
         </>
     )
 }

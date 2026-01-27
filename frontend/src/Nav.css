@@ -1,0 +1,36 @@
+nav {
+    border: 1px solid black;
+    padding: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: white;
+}
+
+nav a, nav button {
+    text-decoration: none;
+    color: black;
+    font-size: 1rem;
+    padding: 5px 10px;
+    border: 1px solid transparent;
+}
+
+nav a:hover {
+    border: 1px solid black;
+}
+
+nav button {
+    background: none;
+    border: 1px solid black;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+nav button:hover {
+    background-color: #f0f0f0;
+}
+
+.nav-separator {
+    color: #ccc;
+}

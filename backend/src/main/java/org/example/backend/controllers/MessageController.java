@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +31,9 @@ public class MessageController {
 
   @GetMapping("/api/messages")
   public ResponseEntity<List<Message>> getAllMessages() {
-    return ResponseEntity.ok(messageRepository.findAll());
+    List<Message> messages = messageRepository.findTop25ByOrderByCreatedAtDesc();
+    Collections.reverse(messages);
+    return ResponseEntity.ok(messages);
   }
 
 }
