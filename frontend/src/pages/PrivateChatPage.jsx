@@ -32,6 +32,17 @@ const PrivateChatPage = ({ user }) => {
         }
     };
 
+    const handleDeleteChat = async () => {
+        if (!window.confirm('Are you sure you want to delete this chat?')) return;
+
+        try {
+            await axios.delete(`/api/private-chats/${chatId}`);
+            navigate('/');
+        } catch (e) {
+            console.error("Error deleting chat:", e);
+        }
+    };
+
     useEffect(() => {
         if (!user) {
             navigate('/');
@@ -58,6 +69,7 @@ const PrivateChatPage = ({ user }) => {
         <div className="private-chat-wrapper">
             <div className="private-chat-header">
                 <h2>Chat with {getOtherUsername()}</h2>
+                <button className="delete-chat-btn" onClick={handleDeleteChat}>Delete Chat</button>
             </div>
 
             <ChatWindow

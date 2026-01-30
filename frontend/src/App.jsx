@@ -8,8 +8,20 @@ import axios from "axios";
 import "./Nav.css";
 
 const App = () => {
-    const [user, setUser] = useState(null)
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem('user');
+        return saved ? JSON.parse(saved) : null;
+    })
     const [privateChats, setPrivateChats] = useState([])
+
+    const handleSetUser = (newUser) => {
+        setUser(newUser);
+        if (newUser) {
+            localStorage.setItem('user', JSON.stringify(newUser));
+        } else {
+            localStorage.removeItem('user');
+        }
+    }
 
     const fetchPrivateChats = async () => {
         if (!user) {
@@ -57,9 +69,9 @@ const App = () => {
             </nav>
 
             <Routes>
-                <Route path="/" element={<PubChat user={user} setUser={setUser} onChatCreated={fetchPrivateChats}/>}/>
-                <Route path="/login" element={<Login setUser={setUser} />}/>
-                <Route path="/signup" element={<Signup setUser={setUser} />}/>
+                <Route path="/" element={<PubChat user={user} setUser={handleSetUser} onChatCreated={fetchPrivateChats}/>}/>
+                <Route path="/login" element={<Login setUser={handleSetUser} />}/>
+                <Route path="/signup" element={<Signup setUser={handleSetUser} />}/>
                 <Route path="/chat/:chatId" element={<PrivateChatPage user={user} />}/>
             </Routes>
         </BrowserRouter>

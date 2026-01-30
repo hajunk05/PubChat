@@ -12,6 +12,7 @@ const Signup = ({ setUser }) => {
     const [previewUrl, setPreviewUrl] = useState('');
     const [isInvalid, setIsInvalid] = useState(false);
     const [invalidMessage, setInvalidMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const navigate = useNavigate();
 
@@ -37,6 +38,7 @@ const Signup = ({ setUser }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setIsLoading(true);
         const newUser = {
             "username": name,
             "email": email,
@@ -51,38 +53,42 @@ const Signup = ({ setUser }) => {
         }).catch(e => {
             setInvalidMessage(e.response.data);
             showMessage();
+            setIsLoading(false);
         })
-
-        setName('')
-        setPassword('')
     }
 
     return (
         <div className="auth-wrapper">
             <div className="auth-card">
                 <h1>Sign Up</h1>
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    <label> Name:
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
-                    </label>
-                    <label> Email:
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/>
-                    </label>
-                    <label> Password:
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
-                    </label>
-                    <label> Profile Picture:
-                        <input type="file" accept="image/*" onChange={handleFileChange}/>
-                    </label>
-                    {previewUrl && (
-                        <div className="profile-preview">
-                            <img src={previewUrl} alt="Profile preview" className="profile-preview-img"/>
-                        </div>
-                    )}
-                    <button className="auth-button" type="submit">Register</button>
-                </form>
-                <small> (Please do not use your real password) </small>
-                {isInvalid && <p className="error-text">{invalidMessage}</p>}
+                {isLoading ? (
+                    <div className="loading">Loading...</div>
+                ) : (
+                    <>
+                        <form className="auth-form" onSubmit={handleSubmit}>
+                            <label> Name:
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
+                            </label>
+                            <label> Email:
+                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/>
+                            </label>
+                            <label> Password:
+                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
+                            </label>
+                            <label> Profile Picture:
+                                <input type="file" accept="image/*" onChange={handleFileChange}/>
+                            </label>
+                            {previewUrl && (
+                                <div className="profile-preview">
+                                    <img src={previewUrl} alt="Profile preview" className="profile-preview-img"/>
+                                </div>
+                            )}
+                            <button className="auth-button" type="submit">Register</button>
+                        </form>
+                        <small> (Please do not use your real password) </small>
+                        {isInvalid && <p className="error-text">{invalidMessage}</p>}
+                    </>
+                )}
             </div>
         </div>
     )

@@ -1,36 +1,57 @@
 nav {
-    border: 1px solid black;
-    padding: 10px;
-    margin-bottom: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 15px 30px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    background-color: white;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-nav a, nav button {
+nav a {
     text-decoration: none;
-    color: black;
-    font-size: 1rem;
-    padding: 5px 10px;
-    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+nav a:first-child {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.5px;
 }
 
 nav a:hover {
-    border: 1px solid black;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-1px);
 }
 
 nav button {
-    background: none;
-    border: 1px solid black;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
     cursor: pointer;
     font-family: inherit;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 nav button:hover {
-    background-color: #f0f0f0;
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
 }
 
 .nav-separator {
-    color: #ccc;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
 }

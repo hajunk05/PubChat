@@ -5,8 +5,6 @@ import "./PubChat.css";
 
 const PubChat = ({ user, setUser, onChatCreated }) => {
     const [profilePictures, setProfilePictures] = useState({});
-    const [editingUsername, setEditingUsername] = useState(false);
-    const [newUsername, setNewUsername] = useState('');
     const [updateError, setUpdateError] = useState('');
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteStatus, setInviteStatus] = useState('');
@@ -44,29 +42,6 @@ const PubChat = ({ user, setUser, onChatCreated }) => {
             }
         };
         reader.readAsDataURL(file);
-    };
-
-    const handleUsernameUpdate = async () => {
-        if (!newUsername.trim()) {
-            setEditingUsername(false);
-            return;
-        }
-
-        try {
-            const res = await axios.put(`/api/users/${user.id}`, {
-                username: newUsername
-            });
-            setUser(res.data);
-            setEditingUsername(false);
-            setUpdateError('');
-        } catch (e) {
-            setUpdateError(e.response?.data || 'Failed to update username');
-        }
-    };
-
-    const startEditingUsername = () => {
-        setNewUsername(user.username);
-        setEditingUsername(true);
     };
 
     const handleInvite = async (e) => {
@@ -131,23 +106,7 @@ const PubChat = ({ user, setUser, onChatCreated }) => {
                             </div>
 
                             <div className="username-container">
-                                <label>Username:</label>
-                                {editingUsername ? (
-                                    <div className="username-edit">
-                                        <input
-                                            type="text"
-                                            value={newUsername}
-                                            onChange={(e) => setNewUsername(e.target.value)}
-                                        />
-                                        <button onClick={handleUsernameUpdate}>Save</button>
-                                        <button onClick={() => setEditingUsername(false)}>Cancel</button>
-                                    </div>
-                                ) : (
-                                    <div className="username-display">
-                                        <span>{user.username}</span>
-                                        <button className="update-btn" onClick={startEditingUsername}>Update</button>
-                                    </div>
-                                )}
+                                <label>Username: <span>{user.username}</span></label>
                             </div>
 
                             {updateError && <p className="error-text">{updateError}</p>}

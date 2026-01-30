@@ -1,8 +1,8 @@
 .main-layout-wrapper {
     position: relative;
-    max-width: 900px;
-    margin: 20px auto;
-    padding-top: 20px;
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 20px;
 }
 
 .login-overlay {
@@ -15,19 +15,24 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
+    backdrop-filter: blur(2px);
 }
 
 .login-overlay h1 {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 20px 30px;
-    border: 1px solid black;
+    background: white;
+    padding: 30px 50px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     text-align: center;
+    font-size: 1.3rem;
+    color: #333;
+    font-weight: 600;
 }
 
 .main-layout {
     display: flex;
     align-items: flex-start;
-    gap: 20px;
+    gap: 25px;
     transition: filter 0.3s ease;
 }
 
@@ -38,44 +43,47 @@
 }
 
 .chat-blurred .chat-window {
-    border: 2px solid #333;
+    border: 2px solid #667eea;
 }
 
 /* Profile Section */
 .profile-section {
-    width: 250px;
+    width: 280px;
     flex-shrink: 0;
-    border: 1px solid black;
-    padding: 15px;
     background: white;
-    height: fit-content;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
+    gap: 20px;
 }
 
 .profile-section h3 {
-    margin: 0 0 15px 0;
+    margin: 0;
     text-align: center;
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 600;
 }
 
 .profile-picture-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 15px;
+    gap: 12px;
 }
 
 .profile-picture-large {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    border: 2px solid black;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #e0e0e0;
-    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .profile-picture-large img {
@@ -85,127 +93,129 @@
 }
 
 .profile-picture-large span {
-    font-weight: bold;
-    font-size: 28px;
-    color: #555;
+    font-weight: 600;
+    font-size: 36px;
+    color: white;
 }
 
 .update-btn {
     cursor: pointer;
-    border: 1px solid black;
-    background: white;
-    padding: 5px 10px;
-    font-size: 12px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
 }
 
 .update-btn:hover {
-    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .username-container {
-    margin-bottom: 15px;
+    text-align: center;
 }
 
 .username-container label {
     display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+    font-size: 0.95rem;
 }
 
-.username-display {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.username-display span {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.username-edit {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.username-edit input {
-    padding: 5px;
-    border: 1px solid black;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.username-edit button {
-    cursor: pointer;
-    border: 1px solid black;
-    background: white;
-    padding: 5px;
-}
-
-.username-edit button:hover {
-    background: #f0f0f0;
+.username-container label span {
+    color: #333;
+    font-weight: 600;
 }
 
 .error-text {
-    color: red;
-    font-size: 12px;
-    margin-bottom: 10px;
+    color: #e53e3e;
+    font-size: 13px;
+    text-align: center;
+    background: #fff5f5;
+    padding: 8px 12px;
+    border-radius: 8px;
 }
 
 .invite-container {
-    margin-bottom: 15px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
 }
 
 .invite-container label {
     display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 0.9rem;
 }
 
 .invite-form {
     display: flex;
-    gap: 5px;
+    gap: 8px;
 }
 
 .invite-form input {
     flex: 1;
-    padding: 5px;
-    border: 1px solid black;
-    font-size: 12px;
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
     min-width: 0;
+    transition: all 0.3s ease;
+}
+
+.invite-form input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .invite-form button {
     cursor: pointer;
-    border: 1px solid black;
-    background: white;
-    padding: 5px 10px;
-    font-size: 12px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    transition: all 0.3s ease;
 }
 
 .invite-form button:hover {
-    background: #f0f0f0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .invite-status {
     display: block;
-    margin-top: 5px;
-    color: #666;
+    margin-top: 8px;
+    color: #667eea;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .signout-btn {
     width: 100%;
-    padding: 8px;
+    padding: 12px;
     cursor: pointer;
-    border: 1px solid black;
+    border: 2px solid #e53e3e;
     background: white;
+    color: #e53e3e;
     font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
     margin-top: auto;
 }
 
 .signout-btn:hover {
-    background: #f0f0f0;
+    background: #e53e3e;
+    color: white;
 }

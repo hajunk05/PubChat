@@ -107,4 +107,17 @@ public class PrivateChatController {
     messagingTemplate.convertAndSend("/topic/private/" + chatId, savedMessage);
     return ResponseEntity.ok(savedMessage);
   }
+
+  @DeleteMapping("/api/private-chats/{chatId}")
+  public ResponseEntity<?> deleteChat(@PathVariable String chatId) {
+    if (!privateChatRepository.existsById(chatId)) {
+      return ResponseEntity.notFound().build();
+    }
+    // Delete all messages in the chat
+    List<PrivateMessage> messages = privateMessageRepository.findByChatIdOrderByCreatedAtAsc(chatId);
+    privateMessageRepository.deleteAll(messages);
+    // Delete the chat
+    privateChatRepository.deleteById(chatId);
+    return ResponseEntity.ok().build();
+  }
 }
