@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
   User findFirstByUsername(String username);
+  User findFirstByEmail(String email);
 }
 
 

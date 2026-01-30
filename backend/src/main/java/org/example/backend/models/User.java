@@ -16,13 +16,15 @@ public class User {
   private boolean isBanned;
   private String password;
   private String profilePicture;
+  private String email;
 
-  public User(String id, String username, boolean isBanned, String password, String profilePicture) {
+  public User(String id, String username, boolean isBanned, String password, String profilePicture, String email) {
     this.id = id;
     this.username = username;
     this.isBanned = isBanned;
     this.password = password;
     this.profilePicture = profilePicture;
+    this.email = email;
   }
 
   public String getId() {
@@ -63,5 +65,13 @@ public class User {
 
   public void setProfilePicture(String profilePicture) {
     this.profilePicture = profilePicture;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 }
