@@ -1,15 +1,20 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import axios from "axios";
 import ChatWindow from "../components/ChatWindow.jsx";
 import "./PubChat.css";
 
-const PubChat = ({ user, setUser, onChatCreated }) => {
+const PubChat = ({ user, setUser }) => {
     const [profilePictures, setProfilePictures] = useState({});
-    const [updateError, setUpdateError] = useState('');
-    const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteStatus, setInviteStatus] = useState('');
 
-    const fileInputRef = useRef(null);
+    // Auth form states
+    const [authMode, setAuthMode] = useState('login');
+    const [authName, setAuthName] = useState('');
+    const [authEmail, setAuthEmail] = useState('');
+    const [authPassword, setAuthPassword] = useState('');
+    const [authProfilePicture, setAuthProfilePicture] = useState('');
+    const [authPreviewUrl, setAuthPreviewUrl] = useState('');
+    const [authError, setAuthError] = useState('');
+    const [authLoading, setAuthLoading] = useState(false);
 
     const fetchProfilePictures = async (usernames) => {
         const unknownUsers = usernames.filter(u => !profilePictures[u]);
@@ -25,114 +30,145 @@ const PubChat = ({ user, setUser, onChatCreated }) => {
         }
     };
 
-    const handleProfilePictureChange = async (e) => {
+    const handleAuthFileChange = (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            try {
-                const res = await axios.put(`/api/users/${user.id}`, {
-                    profilePicture: reader.result
-                });
-                setUser(res.data);
-                setUpdateError('');
-            } catch (e) {
-                setUpdateError(e.response?.data || 'Failed to update profile picture');
-            }
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleInvite = async (e) => {
-        e.preventDefault();
-        if (!inviteEmail.trim()) return;
-
-        try {
-            await axios.post('/api/private-chats', {
-                creatorUsername: user.username,
-                invitedEmail: inviteEmail
-            });
-            setInviteEmail('');
-            setInviteStatus('Invite sent!');
-            setTimeout(() => setInviteStatus(''), 2000);
-            if (onChatCreated) onChatCreated();
-        } catch (e) {
-            setInviteStatus('Failed to create chat');
-            setTimeout(() => setInviteStatus(''), 2000);
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAuthProfilePicture(reader.result);
+                setAuthPreviewUrl(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const handleSignOut = () => {
-        setUser(null);
+    const handleLogin = (e) => {
+        e.preventDefault();
+        setAuthLoading(true);
+        setAuthError('');
+        axios.post(`/api/login?username=${authName}&password=${authPassword}`).then(res => {
+            setUser(res.data);
+            setAuthLoading(false);
+        }).catch(e => {
+            setAuthError(e.response?.data || 'Login failed');
+            setAuthLoading(false);
+        });
+    };
+
+    const handleSignup = (e) => {
+        e.preventDefault();
+        setAuthLoading(true);
+        setAuthError('');
+        const newUser = {
+            username: authName,
+            email: authEmail,
+            isBanned: false,
+            password: authPassword,
+            profilePicture: authProfilePicture
+        };
+        axios.post('/api/signup', newUser).then(res => {
+            setUser(res.data);
+            setAuthLoading(false);
+        }).catch(e => {
+            setAuthError(e.response?.data || 'Signup failed');
+            setAuthLoading(false);
+        });
     };
 
     return (
-        <>
-            <div className="main-layout-wrapper">
-                {!user && <div className="login-overlay"><h1>Please sign up or log in to access the chat.</h1></div>}
-                <div className={`main-layout ${!user ? 'chat-blurred' : ''}`}>
-                    <ChatWindow
-                        user={user}
-                        messagesEndpoint="/api/messages"
-                        sendEndpoint="/api/messages"
-                        websocketTopic="/topic/messages"
-                        profilePictures={profilePictures}
-                        onNewMessage={fetchProfilePictures}
-                    />
+        <div className="pubchat-wrapper">
+            <div className={`pubchat-layout ${user ? 'full-width' : ''}`}>
+                <ChatWindow
+                    user={user}
+                    messagesEndpoint="/api/messages"
+                    sendEndpoint="/api/messages"
+                    websocketTopic="/topic/messages"
+                    profilePictures={profilePictures}
+                    onNewMessage={fetchProfilePictures}
+                />
 
-                    {user && (
-                        <div className="profile-section">
-                            <h3>My Profile</h3>
-
-                            <div className="profile-picture-container">
-                                <div className="profile-picture-large">
-                                    {user.profilePicture ? (
-                                        <img src={user.profilePicture} alt={user.username} />
-                                    ) : (
-                                        <span>{user.username.charAt(0).toUpperCase()}</span>
-                                    )}
-                                </div>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    ref={fileInputRef}
-                                    onChange={handleProfilePictureChange}
-                                    style={{ display: 'none' }}
-                                />
-                                <button className="update-btn" onClick={() => fileInputRef.current.click()}>
-                                    Update Picture
-                                </button>
-                            </div>
-
-                            <div className="username-container">
-                                <label>Username: <span>{user.username}</span></label>
-                            </div>
-
-                            {updateError && <p className="error-text">{updateError}</p>}
-
-                            <div className="invite-container">
-                                <label>Start 1:1 Chat:</label>
-                                <form className="invite-form" onSubmit={handleInvite}>
-                                    <input
-                                        type="email"
-                                        placeholder="Enter email"
-                                        value={inviteEmail}
-                                        onChange={(e) => setInviteEmail(e.target.value)}
-                                    />
-                                    <button type="submit">Invite</button>
-                                </form>
-                                {inviteStatus && <small className="invite-status">{inviteStatus}</small>}
-                            </div>
-
-                            <button className="signout-btn" onClick={handleSignOut}>
-                                Sign Out
+                {!user && (
+                    <div className="auth-section">
+                        <div className="auth-tabs">
+                            <button
+                                className={`auth-tab ${authMode === 'login' ? 'active' : ''}`}
+                                onClick={() => setAuthMode('login')}
+                            >
+                                Log In
+                            </button>
+                            <button
+                                className={`auth-tab ${authMode === 'signup' ? 'active' : ''}`}
+                                onClick={() => setAuthMode('signup')}
+                            >
+                                Sign Up
                             </button>
                         </div>
-                    )}
-                </div>
+
+                        {authLoading ? (
+                            <div className="auth-loading">Loading...</div>
+                        ) : authMode === 'login' ? (
+                            <form className="inline-auth-form" onSubmit={handleLogin}>
+                                <label>Username:
+                                    <input
+                                        type="text"
+                                        value={authName}
+                                        onChange={(e) => setAuthName(e.target.value)}
+                                    />
+                                </label>
+                                <label>Password:
+                                    <input
+                                        type="password"
+                                        value={authPassword}
+                                        onChange={(e) => setAuthPassword(e.target.value)}
+                                    />
+                                </label>
+                                <button className="auth-submit-btn" type="submit">Log In</button>
+                            </form>
+                        ) : (
+                            <form className="inline-auth-form" onSubmit={handleSignup}>
+                                <label>Username:
+                                    <input
+                                        type="text"
+                                        value={authName}
+                                        onChange={(e) => setAuthName(e.target.value)}
+                                    />
+                                </label>
+                                <label>Email:
+                                    <input
+                                        type="email"
+                                        value={authEmail}
+                                        onChange={(e) => setAuthEmail(e.target.value)}
+                                    />
+                                </label>
+                                <label>Password:
+                                    <input
+                                        type="password"
+                                        value={authPassword}
+                                        onChange={(e) => setAuthPassword(e.target.value)}
+                                    />
+                                </label>
+                                <label>Profile Picture:
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAuthFileChange}
+                                    />
+                                </label>
+                                {authPreviewUrl && (
+                                    <div className="auth-preview">
+                                        <img src={authPreviewUrl} alt="Preview" />
+                                    </div>
+                                )}
+                                <button className="auth-submit-btn" type="submit">Sign Up</button>
+                                <small className="auth-note">(Please do not use your real password)</small>
+                            </form>
+                        )}
+
+                        {authError && <p className="auth-error">{authError}</p>}
+                    </div>
+                )}
             </div>
-        </>
+        </div>
     );
 };
 

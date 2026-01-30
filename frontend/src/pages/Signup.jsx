@@ -66,7 +66,7 @@ const Signup = ({ setUser }) => {
                 ) : (
                     <>
                         <form className="auth-form" onSubmit={handleSubmit}>
-                            <label> Name:
+                            <label> Username:
                                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
                             </label>
                             <label> Email:
@@ -85,7 +85,6 @@ const Signup = ({ setUser }) => {
                             )}
                             <button className="auth-button" type="submit">Register</button>
                         </form>
-                        <small> (Please do not use your real password) </small>
                         {isInvalid && <p className="error-text">{invalidMessage}</p>}
                     </>
                 )}

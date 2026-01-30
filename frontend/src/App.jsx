@@ -2,7 +2,8 @@ import {BrowserRouter, Route, Routes, Link} from "react-router-dom";
 import PubChat from "./pages/PubChat.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
-import PrivateChatPage from "./pages/PrivateChatPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import MessagesPage from "./pages/MessagesPage.jsx";
 import {useState, useEffect} from "react";
 import axios from "axios";
 import "./Nav.css";
@@ -40,39 +41,39 @@ const App = () => {
         fetchPrivateChats();
     }, [user]);
 
+    const handleSignOut = () => {
+        handleSetUser(null);
+    };
+
     return (
         <BrowserRouter>
             <nav>
                 <Link style={{fontWeight: 'bold'}} to="/">PubChat</Link>
 
-                {!user ? (
+                {user && (
                     <>
                         <span className="nav-separator">|</span>
-                        <Link to="/login">Login</Link>
+                        <Link to="/messages">Messages</Link>
                         <span className="nav-separator">|</span>
-                        <Link to="/signup">Sign Up</Link>
-                    </>
-                ) : (
-                    <>
-                        {privateChats.map(chat => (
-                            <span key={chat.id}>
-                                <span className="nav-separator">|</span>
-                                <Link to={`/chat/${chat.id}`}>
-                                    {chat.creatorUsername === user.username
-                                        ? (chat.invitedUsername || chat.invitedEmail)
-                                        : chat.creatorUsername}
-                                </Link>
-                            </span>
-                        ))}
+                        <Link to="/profile">My Profile</Link>
+                        <span className="nav-separator">|</span>
+                        <button onClick={handleSignOut}>Sign Out</button>
                     </>
                 )}
             </nav>
 
             <Routes>
-                <Route path="/" element={<PubChat user={user} setUser={handleSetUser} onChatCreated={fetchPrivateChats}/>}/>
+                <Route path="/" element={<PubChat user={user} setUser={handleSetUser} />}/>
                 <Route path="/login" element={<Login setUser={handleSetUser} />}/>
                 <Route path="/signup" element={<Signup setUser={handleSetUser} />}/>
-                <Route path="/chat/:chatId" element={<PrivateChatPage user={user} />}/>
+                <Route path="/profile" element={<ProfilePage user={user} setUser={handleSetUser} />}/>
+                <Route path="/messages" element={
+                    <MessagesPage
+                        user={user}
+                        privateChats={privateChats}
+                        onChatCreated={fetchPrivateChats}
+                    />
+                }/>
             </Routes>
         </BrowserRouter>
     )
