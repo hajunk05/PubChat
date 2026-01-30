@@ -29,7 +29,7 @@ const App = () => {
             </nav>
 
             <Routes>
-                <Route path="/" element={<PubChat user={user}/>}/>
+                <Route path="/" element={<PubChat user={user} setUser={setUser}/>}/>
                 <Route path="/login" element={<Login setUser={setUser} />}/>
                 <Route path="/signup" element={<Signup setUser={setUser} />}/>
             </Routes>

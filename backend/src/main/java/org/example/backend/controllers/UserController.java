@@ -7,8 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
@@ -47,6 +48,40 @@ public class UserController {
     return ResponseEntity.ok(savedUser);
   }
 
+  @GetMapping("/api/users/profile-pictures")
+  public ResponseEntity<Map<String, String>> getProfilePictures(@RequestParam List<String> usernames) {
+    Map<String, String> profilePictures = new HashMap<>();
+    for (String username : usernames) {
+      User user = userRepository.findFirstByUsername(username);
+      if (user != null) {
+        profilePictures.put(username, user.getProfilePicture());
+      }
+    }
+    return ResponseEntity.ok(profilePictures);
+  }
 
+  @PutMapping("/api/users/{id}")
+  public ResponseEntity updateUser(@PathVariable String id, @RequestBody Map<String, String> updates) {
+    User user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.badRequest().body("User not found");
+    }
+
+    if (updates.containsKey("username")) {
+      String newUsername = updates.get("username");
+      User existingUser = userRepository.findFirstByUsername(newUsername);
+      if (existingUser != null && !existingUser.getId().equals(id)) {
+        return ResponseEntity.badRequest().body("Username already taken");
+      }
+      user.setUsername(newUsername);
+    }
+
+    if (updates.containsKey("profilePicture")) {
+      user.setProfilePicture(updates.get("profilePicture"));
+    }
+
+    User savedUser = userRepository.save(user);
+    return ResponseEntity.ok(savedUser);
+  }
 
 }

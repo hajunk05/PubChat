@@ -36,4 +36,10 @@ public class MessageController {
     return ResponseEntity.ok(messages);
   }
 
+  @GetMapping("/api/messages/user/{userId}")
+  public ResponseEntity<List<Message>> getMessagesByUser(@PathVariable String userId) {
+    List<Message> messages = messageRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    return ResponseEntity.ok(messages);
+  }
+
 }

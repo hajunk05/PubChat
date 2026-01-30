@@ -7,6 +7,8 @@ const Signup = ({ setUser }) => {
 
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
+    const [profilePicture, setProfilePicture] = useState('');
+    const [previewUrl, setPreviewUrl] = useState('');
     const [isInvalid, setIsInvalid] = useState(false);
     const [invalidMessage, setInvalidMessage] = useState('');
 
@@ -20,12 +22,25 @@ const Signup = ({ setUser }) => {
         }, 1500)
     }
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfilePicture(reader.result);
+                setPreviewUrl(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const newUser = {
             "username": name,
             "isBanned": false,
-            "password": password
+            "password": password,
+            "profilePicture": profilePicture
         }
 
         axios.post('/api/signup', newUser).then(res => {
@@ -51,6 +66,14 @@ const Signup = ({ setUser }) => {
                     <label> Password:
                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
                     </label>
+                    <label> Profile Picture:
+                        <input type="file" accept="image/*" onChange={handleFileChange}/>
+                    </label>
+                    {previewUrl && (
+                        <div className="profile-preview">
+                            <img src={previewUrl} alt="Profile preview" className="profile-preview-img"/>
+                        </div>
+                    )}
                     <button className="auth-button" type="submit">Register</button>
                 </form>
                 <small> (Please do not use your real password) </small>
