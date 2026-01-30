@@ -2,36 +2,65 @@ import {BrowserRouter, Route, Routes, Link} from "react-router-dom";
 import PubChat from "./pages/PubChat.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
-import {useState} from "react";
+import PrivateChatPage from "./pages/PrivateChatPage.jsx";
+import {useState, useEffect} from "react";
+import axios from "axios";
 import "./Nav.css";
 
 const App = () => {
     const [user, setUser] = useState(null)
+    const [privateChats, setPrivateChats] = useState([])
+
+    const fetchPrivateChats = async () => {
+        if (!user) {
+            setPrivateChats([]);
+            return;
+        }
+        try {
+            const res = await axios.get(`/api/private-chats/user/${user.username}`);
+            setPrivateChats(res.data);
+        } catch (e) {
+            console.error("Error fetching private chats:", e);
+        }
+    };
+
+    useEffect(() => {
+        fetchPrivateChats();
+    }, [user]);
 
     return (
         <BrowserRouter>
             <nav>
                 <Link style={{fontWeight: 'bold'}} to="/">PubChat</Link>
-                <span className="nav-separator">|</span>
 
                 {!user ? (
                     <>
+                        <span className="nav-separator">|</span>
                         <Link to="/login">Login</Link>
                         <span className="nav-separator">|</span>
                         <Link to="/signup">Sign Up</Link>
                     </>
                 ) : (
                     <>
-                        <span style={{marginRight: '10px'}}>User: {user.username}</span>
-                        <button onClick={() => setUser(null)}>Sign Out</button>
+                        {privateChats.map(chat => (
+                            <span key={chat.id}>
+                                <span className="nav-separator">|</span>
+                                <Link to={`/chat/${chat.id}`}>
+                                    {chat.creatorUsername === user.username
+                                        ? (chat.invitedUsername || chat.invitedEmail)
+                                        : chat.creatorUsername}
+                                </Link>
+                            </span>
+                        ))}
                     </>
                 )}
             </nav>
 
             <Routes>
-                <Route path="/" element={<PubChat user={user} setUser={setUser}/>}/>
+                <Route path="/" element={<PubChat user={user} setUser={setUser} onChatCreated={fetchPrivateChats}/>}/>
                 <Route path="/login" element={<Login setUser={setUser} />}/>
                 <Route path="/signup" element={<Signup setUser={setUser} />}/>
+                <Route path="/chat/:chatId" element={<PrivateChatPage user={user} />}/>
             </Routes>
         </BrowserRouter>
     )

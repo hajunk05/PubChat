@@ -1,25 +1,17 @@
-import { useEffect, useState, useRef } from "react";
-import SockJS from 'sockjs-client';
-import Stomp from 'stompjs';
+import { useState, useRef } from "react";
 import axios from "axios";
-import "./PubChat.css"
+import ChatWindow from "../components/ChatWindow.jsx";
+import "./PubChat.css";
 
-
-const PubChat = ({ user, setUser }) => {
-
-    const [messages, setMessages] = useState([])
-    const [messageInput, setMessageInput] = useState('');
+const PubChat = ({ user, setUser, onChatCreated }) => {
     const [profilePictures, setProfilePictures] = useState({});
     const [editingUsername, setEditingUsername] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [updateError, setUpdateError] = useState('');
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteStatus, setInviteStatus] = useState('');
 
-    const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth"});
-    };
 
     const fetchProfilePictures = async (usernames) => {
         const unknownUsers = usernames.filter(u => !profilePictures[u]);
@@ -34,23 +26,6 @@ const PubChat = ({ user, setUser }) => {
             console.error("Error fetching profile pictures:", e);
         }
     };
-
-    const sendMessage = async (e) => {
-        e.preventDefault();
-        if (!messageInput.trim()) return;
-
-        const messageData = {
-            userId: user.username,
-            messageContent: messageInput
-        };
-
-        try {
-            await axios.post('/api/messages', messageData)
-            setMessageInput("")
-        } catch (e) {
-            console.error("Error sending message:", e)
-        }
-    }
 
     const handleProfilePictureChange = async (e) => {
         const file = e.target.files[0];
@@ -94,139 +69,112 @@ const PubChat = ({ user, setUser }) => {
         setEditingUsername(true);
     };
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages])
+    const handleInvite = async (e) => {
+        e.preventDefault();
+        if (!inviteEmail.trim()) return;
 
-    useEffect(() => {
-        axios.get('/api/messages').then(res => {
-            setMessages(res.data);
-            const usernames = [...new Set(res.data.map(m => m.userId))];
-            fetchProfilePictures(usernames);
-        }).catch(err => console.error("Could not load history", err));
+        try {
+            await axios.post('/api/private-chats', {
+                creatorUsername: user.username,
+                invitedEmail: inviteEmail
+            });
+            setInviteEmail('');
+            setInviteStatus('Invite sent!');
+            setTimeout(() => setInviteStatus(''), 2000);
+            if (onChatCreated) onChatCreated();
+        } catch (e) {
+            setInviteStatus('Failed to create chat');
+            setTimeout(() => setInviteStatus(''), 2000);
+        }
+    };
 
-        const socket = new SockJS('/ws');
-        const stompClient = Stomp.over(socket);
-
-        stompClient.connect({}, () => {
-            stompClient.subscribe('/topic/messages', (payload) => {
-
-
-                const newMessage = JSON.parse(payload.body); // Returned messages after new message in db.
-
-                console.log("new message", newMessage)
-
-                setMessages((prev) => {
-                    if (prev.find(m => m.id === newMessage.id)) return prev;
-                    const updated = [...prev, newMessage];
-                    return updated.slice(-25);
-                })
-
-                fetchProfilePictures([newMessage.userId]);
-            })
-        })
-
-        return () => {
-            if (stompClient && socket.readyState === SockJS.OPEN) {
-                stompClient.disconnect();
-            }
-        };
-    }, [])
+    const handleSignOut = () => {
+        setUser(null);
+    };
 
     return (
         <>
             <div className="main-layout-wrapper">
                 {!user && <div className="login-overlay"><h1>Please sign up or log in to access the chat.</h1></div>}
                 <div className={`main-layout ${!user ? 'chat-blurred' : ''}`}>
-                <div className="chat-container">
-                    <div className="chat-window">
-                        {messages.map((m) => {
-                            const isMine = user && m.userId === user.username
-                            const pic = isMine ? user?.profilePicture : profilePictures[m.userId];
-
-                            return (
-                                <div key={m.id} className={`message-row ${isMine ? 'message-row-right' : 'message-row-left'}`}>
-                                    {!isMine && (
-                                        <div className="profile-pic">
-                                            {pic ? <img src={pic} alt={m.userId}/> : <span>{m.userId.charAt(0).toUpperCase()}</span>}
-                                        </div>
-                                    )}
-                                    <div className={`message-bubble ${isMine ? 'message-right' : 'message-left'}`}>
-                                        <small> {m.userId}: </small>
-                                        {m.messageContent}
-                                    </div>
-                                    {isMine && (
-                                        <div className="profile-pic">
-                                            {pic ? <img src={pic} alt={m.userId}/> : <span>{m.userId.charAt(0).toUpperCase()}</span>}
-                                        </div>
-                                    )}
-                                </div> )
-                        })}
-                        <div ref={messagesEndRef} />
-                    </div>
+                    <ChatWindow
+                        user={user}
+                        messagesEndpoint="/api/messages"
+                        sendEndpoint="/api/messages"
+                        websocketTopic="/topic/messages"
+                        profilePictures={profilePictures}
+                        onNewMessage={fetchProfilePictures}
+                    />
 
                     {user && (
-                        <form className="chat-form" onSubmit={sendMessage}>
-                            <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)}
-                                   placeholder="Type a message..."
-                            />
-                            <button type="submit"> Send </button>
-                        </form>
-                    )
-                    }
-                </div>
+                        <div className="profile-section">
+                            <h3>My Profile</h3>
 
-                {user && (
-                    <div className="profile-section">
-                        <h3>My Profile</h3>
+                            <div className="profile-picture-container">
+                                <div className="profile-picture-large">
+                                    {user.profilePicture ? (
+                                        <img src={user.profilePicture} alt={user.username} />
+                                    ) : (
+                                        <span>{user.username.charAt(0).toUpperCase()}</span>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={fileInputRef}
+                                    onChange={handleProfilePictureChange}
+                                    style={{ display: 'none' }}
+                                />
+                                <button className="update-btn" onClick={() => fileInputRef.current.click()}>
+                                    Update Picture
+                                </button>
+                            </div>
 
-                        <div className="profile-picture-container">
-                            <div className="profile-picture-large">
-                                {user.profilePicture ? (
-                                    <img src={user.profilePicture} alt={user.username}/>
+                            <div className="username-container">
+                                <label>Username:</label>
+                                {editingUsername ? (
+                                    <div className="username-edit">
+                                        <input
+                                            type="text"
+                                            value={newUsername}
+                                            onChange={(e) => setNewUsername(e.target.value)}
+                                        />
+                                        <button onClick={handleUsernameUpdate}>Save</button>
+                                        <button onClick={() => setEditingUsername(false)}>Cancel</button>
+                                    </div>
                                 ) : (
-                                    <span>{user.username.charAt(0).toUpperCase()}</span>
+                                    <div className="username-display">
+                                        <span>{user.username}</span>
+                                        <button className="update-btn" onClick={startEditingUsername}>Update</button>
+                                    </div>
                                 )}
                             </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                ref={fileInputRef}
-                                onChange={handleProfilePictureChange}
-                                style={{ display: 'none' }}
-                            />
-                            <button className="update-btn" onClick={() => fileInputRef.current.click()}>
-                                Update Picture
+
+                            {updateError && <p className="error-text">{updateError}</p>}
+
+                            <div className="invite-container">
+                                <label>Start 1:1 Chat:</label>
+                                <form className="invite-form" onSubmit={handleInvite}>
+                                    <input
+                                        type="email"
+                                        placeholder="Enter email"
+                                        value={inviteEmail}
+                                        onChange={(e) => setInviteEmail(e.target.value)}
+                                    />
+                                    <button type="submit">Invite</button>
+                                </form>
+                                {inviteStatus && <small className="invite-status">{inviteStatus}</small>}
+                            </div>
+
+                            <button className="signout-btn" onClick={handleSignOut}>
+                                Sign Out
                             </button>
                         </div>
-
-                        <div className="username-container">
-                            <label>Username:</label>
-                            {editingUsername ? (
-                                <div className="username-edit">
-                                    <input
-                                        type="text"
-                                        value={newUsername}
-                                        onChange={(e) => setNewUsername(e.target.value)}
-                                    />
-                                    <button onClick={handleUsernameUpdate}>Save</button>
-                                    <button onClick={() => setEditingUsername(false)}>Cancel</button>
-                                </div>
-                            ) : (
-                                <div className="username-display">
-                                    <span>{user.username}</span>
-                                    <button className="update-btn" onClick={startEditingUsername}>Update</button>
-                                </div>
-                            )}
-                        </div>
-
-                        {updateError && <p className="error-text">{updateError}</p>}
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
             </div>
         </>
-    )
-}
+    );
+};
 
 export default PubChat;

@@ -1,0 +1,14 @@
+.private-chat-wrapper {
+    max-width: 600px;
+    margin: 20px auto;
+    padding-top: 20px;
+}
+
+.private-chat-header {
+    margin-bottom: 10px;
+}
+
+.private-chat-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
