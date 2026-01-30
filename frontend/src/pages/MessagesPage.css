@@ -64,6 +64,70 @@
     font-size: 12px;
 }
 
+/* Pending invites */
+.pending-invites {
+    border-bottom: 1px solid black;
+    background: #fffbea;
+}
+
+.pending-invites-header {
+    padding: 10px 15px;
+    font-weight: bold;
+    font-size: 13px;
+    color: #856404;
+    border-bottom: 1px solid #e0d5a8;
+}
+
+.invite-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0d5a8;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.invite-item:last-child {
+    border-bottom: none;
+}
+
+.invite-from {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.invite-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.accept-btn {
+    cursor: pointer;
+    border: 1px solid #28a745;
+    background: #28a745;
+    color: white;
+    padding: 5px 12px;
+    font-size: 12px;
+    border-radius: 3px;
+}
+
+.accept-btn:hover {
+    background: #218838;
+}
+
+.decline-btn {
+    cursor: pointer;
+    border: 1px solid #dc3545;
+    background: white;
+    color: #dc3545;
+    padding: 5px 12px;
+    font-size: 12px;
+    border-radius: 3px;
+}
+
+.decline-btn:hover {
+    background: #f8d7da;
+}
+
 .chat-list {
     flex: 1;
     overflow-y: auto;

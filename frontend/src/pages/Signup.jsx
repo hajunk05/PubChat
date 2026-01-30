@@ -38,6 +38,19 @@ const Signup = ({ setUser }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!email.trim()) {
+            setInvalidMessage('Email is required');
+            showMessage();
+            return;
+        }
+
+        if (!password.trim()) {
+            setInvalidMessage('Password is required');
+            showMessage();
+            return;
+        }
+
         setIsLoading(true);
         const newUser = {
             "username": name,
@@ -70,10 +83,10 @@ const Signup = ({ setUser }) => {
                                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
                             </label>
                             <label> Email:
-                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}/>
+                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required/>
                             </label>
                             <label> Password:
-                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
+                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required/>
                             </label>
                             <label> Profile Picture:
                                 <input type="file" accept="image/*" onChange={handleFileChange}/>

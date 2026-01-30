@@ -6,6 +6,8 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import MessagesPage from "./pages/MessagesPage.jsx";
 import {useState, useEffect} from "react";
 import axios from "axios";
+import SockJS from 'sockjs-client';
+import Stomp from 'stompjs';
 import "./Nav.css";
 
 const App = () => {
@@ -14,6 +16,7 @@ const App = () => {
         return saved ? JSON.parse(saved) : null;
     })
     const [privateChats, setPrivateChats] = useState([])
+    const [pendingInvites, setPendingInvites] = useState([])
 
     const handleSetUser = (newUser) => {
         setUser(newUser);
@@ -37,8 +40,59 @@ const App = () => {
         }
     };
 
+    const fetchPendingInvites = async () => {
+        if (!user) {
+            setPendingInvites([]);
+            return;
+        }
+        try {
+            const res = await axios.get(`/api/private-chats/user/${user.username}/pending`);
+            setPendingInvites(res.data);
+        } catch (e) {
+            console.error("Error fetching pending invites:", e);
+        }
+    };
+
     useEffect(() => {
         fetchPrivateChats();
+        fetchPendingInvites();
+    }, [user]);
+
+    // Subscribe to WebSocket for new chat and invite notifications
+    useEffect(() => {
+        if (!user) return;
+
+        const socket = new SockJS('/ws');
+        const stompClient = Stomp.over(socket);
+        stompClient.debug = null; // Disable debug logs
+
+        stompClient.connect({}, () => {
+            // Listen for accepted chats (when someone accepts your invite)
+            stompClient.subscribe(`/topic/user/${user.username}/chats`, (payload) => {
+                const newChat = JSON.parse(payload.body);
+                setPrivateChats(prev => {
+                    if (prev.find(c => c.id === newChat.id)) return prev;
+                    return [...prev, newChat];
+                });
+            });
+
+            // Listen for new invites
+            stompClient.subscribe(`/topic/user/${user.username}/invites`, (payload) => {
+                const newInvite = JSON.parse(payload.body);
+                setPendingInvites(prev => {
+                    if (prev.find(c => c.id === newInvite.id)) return prev;
+                    return [...prev, newInvite];
+                });
+            });
+        }, (error) => {
+            console.error('WebSocket connection error:', error);
+        });
+
+        return () => {
+            if (stompClient && stompClient.connected) {
+                stompClient.disconnect();
+            }
+        };
     }, [user]);
 
     const handleSignOut = () => {
@@ -71,7 +125,9 @@ const App = () => {
                     <MessagesPage
                         user={user}
                         privateChats={privateChats}
+                        pendingInvites={pendingInvites}
                         onChatCreated={fetchPrivateChats}
+                        onInviteHandled={() => { fetchPrivateChats(); fetchPendingInvites(); }}
                     />
                 }/>
             </Routes>

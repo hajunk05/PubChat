@@ -34,25 +34,45 @@ public class PrivateChatController {
   @PostMapping("/api/private-chats")
   public ResponseEntity<PrivateChat> createPrivateChat(@RequestBody PrivateChat chat) {
     chat.setCreatedAt(new Date());
+    chat.setStatus("pending");
 
     // Check if invited user already exists by email
     User invitedUser = userRepository.findFirstByEmail(chat.getInvitedEmail());
+
     if (invitedUser != null) {
       chat.setInvitedUsername(invitedUser.getUsername());
     }
 
     PrivateChat savedChat = privateChatRepository.save(chat);
+
+    // Notify the invited user via WebSocket if they exist
+    if (invitedUser != null) {
+      String topic = "/topic/user/" + invitedUser.getUsername() + "/invites";
+      messagingTemplate.convertAndSend(topic, savedChat);
+    }
+
     return ResponseEntity.ok(savedChat);
   }
 
   @GetMapping("/api/private-chats/user/{username}")
   public ResponseEntity<List<PrivateChat>> getUserChats(@PathVariable String username) {
+    // Get accepted chats where user is creator
+    List<PrivateChat> createdChats = privateChatRepository.findByCreatorUsernameAndStatus(username, "accepted");
+    // Get accepted chats where user is invited
+    List<PrivateChat> invitedChats = privateChatRepository.findByInvitedUsernameAndStatus(username, "accepted");
+
+    List<PrivateChat> allChats = new ArrayList<>();
+    allChats.addAll(createdChats);
+    allChats.addAll(invitedChats);
+
+    return ResponseEntity.ok(allChats);
+  }
+
+  @GetMapping("/api/private-chats/user/{username}/pending")
+  public ResponseEntity<List<PrivateChat>> getPendingInvites(@PathVariable String username) {
     User user = userRepository.findFirstByUsername(username);
 
-    List<PrivateChat> createdChats = privateChatRepository.findByCreatorUsername(username);
-    List<PrivateChat> invitedChats = privateChatRepository.findByInvitedUsername(username);
-
-    // Also find chats where user's email matches invitedEmail and link them
+    // Link any email-based invites to the user
     if (user != null && user.getEmail() != null) {
       List<PrivateChat> emailInvitedChats = privateChatRepository.findByInvitedEmail(user.getEmail());
       for (PrivateChat chat : emailInvitedChats) {
@@ -61,15 +81,43 @@ public class PrivateChatController {
           privateChatRepository.save(chat);
         }
       }
-      // Re-fetch invited chats after linking
-      invitedChats = privateChatRepository.findByInvitedUsername(username);
     }
 
-    List<PrivateChat> allChats = new ArrayList<>();
-    allChats.addAll(createdChats);
-    allChats.addAll(invitedChats);
+    // Get pending invites where user is the invited one
+    List<PrivateChat> pendingInvites = privateChatRepository.findByInvitedUsernameAndStatus(username, "pending");
+    return ResponseEntity.ok(pendingInvites);
+  }
 
-    return ResponseEntity.ok(allChats);
+  @PostMapping("/api/private-chats/{chatId}/accept")
+  public ResponseEntity<PrivateChat> acceptInvite(@PathVariable String chatId, @RequestParam String username) {
+    return privateChatRepository.findById(chatId)
+        .map(chat -> {
+          if (!username.equals(chat.getInvitedUsername())) {
+            return ResponseEntity.badRequest().<PrivateChat>body(null);
+          }
+          chat.setStatus("accepted");
+          PrivateChat savedChat = privateChatRepository.save(chat);
+
+          // Notify the creator that the invite was accepted
+          messagingTemplate.convertAndSend("/topic/user/" + chat.getCreatorUsername() + "/chats", savedChat);
+
+          return ResponseEntity.ok(savedChat);
+        })
+        .orElse(ResponseEntity.notFound().build());
+  }
+
+  @PostMapping("/api/private-chats/{chatId}/decline")
+  public ResponseEntity<?> declineInvite(@PathVariable String chatId, @RequestParam String username) {
+    return privateChatRepository.findById(chatId)
+        .map(chat -> {
+          if (!username.equals(chat.getInvitedUsername())) {
+            return ResponseEntity.badRequest().body("Not authorized");
+          }
+          chat.setStatus("declined");
+          privateChatRepository.save(chat);
+          return ResponseEntity.ok().build();
+        })
+        .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/api/private-chats/{chatId}")

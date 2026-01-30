@@ -4,7 +4,7 @@ import axios from "axios";
 import ChatWindow from "../components/ChatWindow.jsx";
 import "./MessagesPage.css";
 
-const MessagesPage = ({ user, privateChats, onChatCreated }) => {
+const MessagesPage = ({ user, privateChats, pendingInvites = [], onChatCreated, onInviteHandled }) => {
     const navigate = useNavigate();
     const [selectedChatId, setSelectedChatId] = useState(null);
     const [selectedChat, setSelectedChat] = useState(null);
@@ -19,6 +19,8 @@ const MessagesPage = ({ user, privateChats, onChatCreated }) => {
     }, [user, navigate]);
 
     useEffect(() => {
+        if (!user) return;
+
         if (selectedChatId) {
             axios.get(`/api/private-chats/${selectedChatId}`)
                 .then(res => {
@@ -41,6 +43,8 @@ const MessagesPage = ({ user, privateChats, onChatCreated }) => {
 
     // Fetch profile pictures for chat list
     useEffect(() => {
+        if (!user) return;
+
         if (privateChats.length > 0) {
             const usernames = privateChats.map(chat =>
                 chat.creatorUsername === user.username
@@ -108,6 +112,24 @@ const MessagesPage = ({ user, privateChats, onChatCreated }) => {
         }
     };
 
+    const handleAcceptInvite = async (chatId) => {
+        try {
+            await axios.post(`/api/private-chats/${chatId}/accept?username=${user.username}`);
+            if (onInviteHandled) onInviteHandled();
+        } catch (e) {
+            console.error("Error accepting invite:", e);
+        }
+    };
+
+    const handleDeclineInvite = async (chatId) => {
+        try {
+            await axios.post(`/api/private-chats/${chatId}/decline?username=${user.username}`);
+            if (onInviteHandled) onInviteHandled();
+        } catch (e) {
+            console.error("Error declining invite:", e);
+        }
+    };
+
     const getOtherUsername = (chat) => {
         if (!chat) return '';
         return chat.creatorUsername === user.username
@@ -137,11 +159,37 @@ const MessagesPage = ({ user, privateChats, onChatCreated }) => {
                         {inviteStatus && <small className="invite-status">{inviteStatus}</small>}
                     </div>
 
+                    {/* Pending invites */}
+                    {pendingInvites.length > 0 && (
+                        <div className="pending-invites">
+                            <div className="pending-invites-header">Pending Invites</div>
+                            {pendingInvites.map(invite => (
+                                <div key={invite.id} className="invite-item">
+                                    <span className="invite-from">From: {invite.creatorUsername}</span>
+                                    <div className="invite-actions">
+                                        <button
+                                            className="accept-btn"
+                                            onClick={() => handleAcceptInvite(invite.id)}
+                                        >
+                                            Accept
+                                        </button>
+                                        <button
+                                            className="decline-btn"
+                                            onClick={() => handleDeclineInvite(invite.id)}
+                                        >
+                                            Decline
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Chat list */}
                     <div className="chat-list">
-                        {privateChats.length === 0 ? (
+                        {privateChats.length === 0 && pendingInvites.length === 0 ? (
                             <div className="no-chats">No conversations yet</div>
-                        ) : (
+                        ) : privateChats.length === 0 ? null : (
                             privateChats.map(chat => {
                                 const otherUsername = getOtherUsername(chat);
                                 const otherProfilePic = profilePictures[otherUsername];

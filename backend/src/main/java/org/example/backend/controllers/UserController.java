@@ -22,8 +22,20 @@ public class UserController {
 
   @PostMapping("/api/signup")
   public ResponseEntity createUser(@RequestBody User user) {
+    if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+      return ResponseEntity.badRequest().body("Email is required");
+    }
+
+    if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+      return ResponseEntity.badRequest().body("Password is required");
+    }
+
+    if (userRepository.findFirstByEmail(user.getEmail()) != null) {
+      return ResponseEntity.badRequest().body("An account with this email already exists");
+    }
+
     if (userRepository.findFirstByUsername(user.getUsername()) != null) {
-      return ResponseEntity.badRequest().body("User Already Exists");
+      return ResponseEntity.badRequest().body("Username already taken");
     }
 
     String hashedPassword = passwordEncoder.encode(user.getPassword());

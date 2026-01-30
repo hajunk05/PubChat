@@ -15,6 +15,7 @@ public class PrivateChat {
   private String invitedEmail;
   private String invitedUsername;
   private Date createdAt;
+  private String status; // pending, accepted, declined
 
   public PrivateChat() {}
 
@@ -64,5 +65,13 @@ public class PrivateChat {
 
   public void setCreatedAt(Date createdAt) {
     this.createdAt = createdAt;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 }
