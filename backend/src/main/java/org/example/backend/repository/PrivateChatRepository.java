@@ -13,4 +13,5 @@ public interface PrivateChatRepository extends MongoRepository<PrivateChat, Stri
   List<PrivateChat> findByInvitedEmail(String invitedEmail);
   List<PrivateChat> findByCreatorUsernameAndStatus(String creatorUsername, String status);
   List<PrivateChat> findByInvitedUsernameAndStatus(String invitedUsername, String status);
+  List<PrivateChat> findByCreatorUsernameAndInvitedUsername(String creatorUsername, String invitedUsername);
 }

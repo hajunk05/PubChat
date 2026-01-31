@@ -108,43 +108,48 @@ const PubChat = ({ user, setUser }) => {
                             <div className="auth-loading">Loading...</div>
                         ) : authMode === 'login' ? (
                             <form className="inline-auth-form" onSubmit={handleLogin}>
-                                <label>Username:
+                                <label>Username:<span className="required">*</span>
                                     <input
                                         type="text"
                                         value={authName}
                                         onChange={(e) => setAuthName(e.target.value)}
+                                        required
                                     />
                                 </label>
-                                <label>Password:
+                                <label>Password:<span className="required">*</span>
                                     <input
                                         type="password"
                                         value={authPassword}
                                         onChange={(e) => setAuthPassword(e.target.value)}
+                                        required
                                     />
                                 </label>
                                 <button className="auth-submit-btn" type="submit">Log In</button>
                             </form>
                         ) : (
                             <form className="inline-auth-form" onSubmit={handleSignup}>
-                                <label>Username:
+                                <label>Username:<span className="required">*</span>
                                     <input
                                         type="text"
                                         value={authName}
                                         onChange={(e) => setAuthName(e.target.value)}
+                                        required
                                     />
                                 </label>
-                                <label>Email:
+                                <label>Email:<span className="required">*</span>
                                     <input
                                         type="email"
                                         value={authEmail}
                                         onChange={(e) => setAuthEmail(e.target.value)}
+                                        required
                                     />
                                 </label>
-                                <label>Password:
+                                <label>Password:<span className="required">*</span>
                                     <input
                                         type="password"
                                         value={authPassword}
                                         onChange={(e) => setAuthPassword(e.target.value)}
+                                        required
                                     />
                                 </label>
                                 <label>Profile Picture:

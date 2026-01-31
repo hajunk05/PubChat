@@ -71,6 +71,11 @@
     font-size: 12px;
 }
 
+.inline-auth-form .required {
+    color: red;
+    margin-left: 2px;
+}
+
 .inline-auth-form input {
     display: block;
     width: 100%;

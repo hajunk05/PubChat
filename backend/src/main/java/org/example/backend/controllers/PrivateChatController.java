@@ -32,24 +32,41 @@ public class PrivateChatController {
   private SimpMessagingTemplate messagingTemplate;
 
   @PostMapping("/api/private-chats")
-  public ResponseEntity<PrivateChat> createPrivateChat(@RequestBody PrivateChat chat) {
+  public ResponseEntity<?> createPrivateChat(@RequestBody PrivateChat chat) {
+    // Check if invited user exists by username
+    User invitedUser = userRepository.findFirstByUsername(chat.getInvitedUsername());
+
+    if (invitedUser == null) {
+      return ResponseEntity.badRequest().body("User not found");
+    }
+
+    // Prevent inviting yourself
+    if (chat.getCreatorUsername().equals(chat.getInvitedUsername())) {
+      return ResponseEntity.badRequest().body("Cannot invite yourself");
+    }
+
+    // Check if chat already exists between these two users (in either direction)
+    List<PrivateChat> existingChats1 = privateChatRepository.findByCreatorUsernameAndInvitedUsername(
+        chat.getCreatorUsername(), chat.getInvitedUsername());
+    List<PrivateChat> existingChats2 = privateChatRepository.findByCreatorUsernameAndInvitedUsername(
+        chat.getInvitedUsername(), chat.getCreatorUsername());
+
+    // Filter out declined chats - only block if pending or accepted
+    boolean hasActiveChat = existingChats1.stream().anyMatch(c -> !"declined".equals(c.getStatus()))
+        || existingChats2.stream().anyMatch(c -> !"declined".equals(c.getStatus()));
+
+    if (hasActiveChat) {
+      return ResponseEntity.badRequest().body("Chat already exists with this user");
+    }
+
     chat.setCreatedAt(new Date());
     chat.setStatus("pending");
 
-    // Check if invited user already exists by email
-    User invitedUser = userRepository.findFirstByEmail(chat.getInvitedEmail());
-
-    if (invitedUser != null) {
-      chat.setInvitedUsername(invitedUser.getUsername());
-    }
-
     PrivateChat savedChat = privateChatRepository.save(chat);
 
-    // Notify the invited user via WebSocket if they exist
-    if (invitedUser != null) {
-      String topic = "/topic/user/" + invitedUser.getUsername() + "/invites";
-      messagingTemplate.convertAndSend(topic, savedChat);
-    }
+    // Notify the invited user via WebSocket
+    String topic = "/topic/user/" + invitedUser.getUsername() + "/invites";
+    messagingTemplate.convertAndSend(topic, savedChat);
 
     return ResponseEntity.ok(savedChat);
   }
@@ -70,19 +87,6 @@ public class PrivateChatController {
 
   @GetMapping("/api/private-chats/user/{username}/pending")
   public ResponseEntity<List<PrivateChat>> getPendingInvites(@PathVariable String username) {
-    User user = userRepository.findFirstByUsername(username);
-
-    // Link any email-based invites to the user
-    if (user != null && user.getEmail() != null) {
-      List<PrivateChat> emailInvitedChats = privateChatRepository.findByInvitedEmail(user.getEmail());
-      for (PrivateChat chat : emailInvitedChats) {
-        if (chat.getInvitedUsername() == null || chat.getInvitedUsername().isEmpty()) {
-          chat.setInvitedUsername(username);
-          privateChatRepository.save(chat);
-        }
-      }
-    }
-
     // Get pending invites where user is the invited one
     List<PrivateChat> pendingInvites = privateChatRepository.findByInvitedUsernameAndStatus(username, "pending");
     return ResponseEntity.ok(pendingInvites);
@@ -158,14 +162,22 @@ public class PrivateChatController {
 
   @DeleteMapping("/api/private-chats/{chatId}")
   public ResponseEntity<?> deleteChat(@PathVariable String chatId) {
-    if (!privateChatRepository.existsById(chatId)) {
-      return ResponseEntity.notFound().build();
-    }
-    // Delete all messages in the chat
-    List<PrivateMessage> messages = privateMessageRepository.findByChatIdOrderByCreatedAtAsc(chatId);
-    privateMessageRepository.deleteAll(messages);
-    // Delete the chat
-    privateChatRepository.deleteById(chatId);
-    return ResponseEntity.ok().build();
+    return privateChatRepository.findById(chatId)
+        .map(chat -> {
+          // Delete all messages in the chat
+          List<PrivateMessage> messages = privateMessageRepository.findByChatIdOrderByCreatedAtAsc(chatId);
+          privateMessageRepository.deleteAll(messages);
+
+          // Notify both users about the deletion
+          messagingTemplate.convertAndSend("/topic/user/" + chat.getCreatorUsername() + "/chat-deleted", chatId);
+          if (chat.getInvitedUsername() != null) {
+            messagingTemplate.convertAndSend("/topic/user/" + chat.getInvitedUsername() + "/chat-deleted", chatId);
+          }
+
+          // Delete the chat
+          privateChatRepository.deleteById(chatId);
+          return ResponseEntity.ok().build();
+        })
+        .orElse(ResponseEntity.notFound().build());
   }
 }

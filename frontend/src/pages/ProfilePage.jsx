@@ -8,6 +8,7 @@ const ProfilePage = ({ user, setUser }) => {
     const fileInputRef = useRef(null);
     const [updateError, setUpdateError] = useState('');
     const [updateSuccess, setUpdateSuccess] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
 
     if (!user) {
         navigate('/');
@@ -18,20 +19,33 @@ const ProfilePage = ({ user, setUser }) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        setIsUploading(true);
+        setUpdateError('');
+        setUpdateSuccess('');
+
         const reader = new FileReader();
         reader.onloadend = async () => {
             try {
                 const res = await axios.put(`/api/users/${user.id}`, {
                     profilePicture: reader.result
                 });
-                setUser(res.data);
-                setUpdateError('');
-                setUpdateSuccess('Profile picture updated!');
-                setTimeout(() => setUpdateSuccess(''), 2000);
+                if (res.data) {
+                    setUser(res.data);
+                    setUpdateSuccess('Profile picture updated!');
+                    setTimeout(() => setUpdateSuccess(''), 2000);
+                }
             } catch (e) {
-                setUpdateError(e.response?.data || 'Failed to update profile picture');
-                setUpdateSuccess('');
+                const errorMsg = typeof e.response?.data === 'string'
+                    ? e.response.data
+                    : 'Failed to update profile picture';
+                setUpdateError(errorMsg);
+            } finally {
+                setIsUploading(false);
             }
+        };
+        reader.onerror = () => {
+            setUpdateError('Failed to read image file');
+            setIsUploading(false);
         };
         reader.readAsDataURL(file);
     };
@@ -42,8 +56,10 @@ const ProfilePage = ({ user, setUser }) => {
                 <h2>My Profile</h2>
 
                 <div className="profile-picture-section">
-                    <div className="profile-picture-large">
-                        {user.profilePicture ? (
+                    <div className={`profile-picture-large ${isUploading ? 'uploading' : ''}`}>
+                        {isUploading ? (
+                            <div className="upload-spinner"></div>
+                        ) : user.profilePicture ? (
                             <img src={user.profilePicture} alt={user.username} />
                         ) : (
                             <span>{user.username.charAt(0).toUpperCase()}</span>
@@ -55,9 +71,14 @@ const ProfilePage = ({ user, setUser }) => {
                         ref={fileInputRef}
                         onChange={handleProfilePictureChange}
                         style={{ display: 'none' }}
+                        disabled={isUploading}
                     />
-                    <button className="update-picture-btn" onClick={() => fileInputRef.current.click()}>
-                        Update Picture
+                    <button
+                        className="update-picture-btn"
+                        onClick={() => fileInputRef.current.click()}
+                        disabled={isUploading}
+                    >
+                        {isUploading ? 'Uploading...' : 'Update Picture'}
                     </button>
                 </div>
 

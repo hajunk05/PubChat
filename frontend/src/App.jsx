@@ -84,6 +84,13 @@ const App = () => {
                     return [...prev, newInvite];
                 });
             });
+
+            // Listen for chat deletions
+            stompClient.subscribe(`/topic/user/${user.username}/chat-deleted`, (payload) => {
+                const deletedChatId = JSON.parse(payload.body);
+                setPrivateChats(prev => prev.filter(c => c.id !== deletedChatId));
+                setPendingInvites(prev => prev.filter(c => c.id !== deletedChatId));
+            });
         }, (error) => {
             console.error('WebSocket connection error:', error);
         });
@@ -107,7 +114,12 @@ const App = () => {
                 {user && (
                     <>
                         <span className="nav-separator">|</span>
-                        <Link to="/messages">Messages</Link>
+                        <Link to="/messages" className="messages-link">
+                            Messages
+                            {pendingInvites.length > 0 && (
+                                <span className="invite-badge">{pendingInvites.length}</span>
+                            )}
+                        </Link>
                         <span className="nav-separator">|</span>
                         <Link to="/profile">My Profile</Link>
                         <span className="nav-separator">|</span>

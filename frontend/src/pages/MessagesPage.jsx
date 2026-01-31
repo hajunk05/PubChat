@@ -9,7 +9,7 @@ const MessagesPage = ({ user, privateChats, pendingInvites = [], onChatCreated, 
     const [selectedChatId, setSelectedChatId] = useState(null);
     const [selectedChat, setSelectedChat] = useState(null);
     const [profilePictures, setProfilePictures] = useState({});
-    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteUsername, setInviteUsername] = useState('');
     const [inviteStatus, setInviteStatus] = useState('');
 
     useEffect(() => {
@@ -40,6 +40,14 @@ const MessagesPage = ({ user, privateChats, pendingInvites = [], onChatCreated, 
             setSelectedChat(null);
         }
     }, [selectedChatId, user]);
+
+    // Clear selected chat if it was deleted
+    useEffect(() => {
+        if (selectedChatId && !privateChats.find(c => c.id === selectedChatId)) {
+            setSelectedChatId(null);
+            setSelectedChat(null);
+        }
+    }, [privateChats, selectedChatId]);
 
     // Fetch profile pictures for chat list
     useEffect(() => {
@@ -81,20 +89,23 @@ const MessagesPage = ({ user, privateChats, pendingInvites = [], onChatCreated, 
 
     const handleInvite = async (e) => {
         e.preventDefault();
-        if (!inviteEmail.trim()) return;
+        if (!inviteUsername.trim()) return;
 
         try {
             await axios.post('/api/private-chats', {
                 creatorUsername: user.username,
-                invitedEmail: inviteEmail
+                invitedUsername: inviteUsername
             });
-            setInviteEmail('');
+            setInviteUsername('');
             setInviteStatus('Invite sent!');
-            setTimeout(() => setInviteStatus(''), 2000);
+            setTimeout(() => setInviteStatus(''), 3000);
             if (onChatCreated) onChatCreated();
         } catch (e) {
-            setInviteStatus('Failed to create chat');
-            setTimeout(() => setInviteStatus(''), 2000);
+            const errorMsg = typeof e.response?.data === 'string'
+                ? e.response.data
+                : 'Failed to create chat';
+            setInviteStatus('Error: ' + errorMsg);
+            setTimeout(() => setInviteStatus(''), 5000);
         }
     };
 
@@ -133,7 +144,7 @@ const MessagesPage = ({ user, privateChats, pendingInvites = [], onChatCreated, 
     const getOtherUsername = (chat) => {
         if (!chat) return '';
         return chat.creatorUsername === user.username
-            ? (chat.invitedUsername || chat.invitedEmail)
+            ? chat.invitedUsername
             : chat.creatorUsername;
     };
 
@@ -149,10 +160,10 @@ const MessagesPage = ({ user, privateChats, pendingInvites = [], onChatCreated, 
                         <label>Start 1:1 Chat:</label>
                         <form className="invite-form" onSubmit={handleInvite}>
                             <input
-                                type="email"
-                                placeholder="Enter email"
-                                value={inviteEmail}
-                                onChange={(e) => setInviteEmail(e.target.value)}
+                                type="text"
+                                placeholder="Enter username"
+                                value={inviteUsername}
+                                onChange={(e) => setInviteUsername(e.target.value)}
                             />
                             <button type="submit">Invite</button>
                         </form>
