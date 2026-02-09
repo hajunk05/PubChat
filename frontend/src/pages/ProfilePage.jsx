@@ -34,12 +34,14 @@ const ProfilePage = ({ user, setUser }) => {
                     setUpdateSuccess('Profile picture updated!');
                     setTimeout(() => setUpdateSuccess(''), 2000);
                 }
+                if (!res.data?.profilePicture) {
+                    setIsUploading(false);
+                }
             } catch (e) {
                 const errorMsg = typeof e.response?.data === 'string'
                     ? e.response.data
                     : 'Failed to update profile picture';
                 setUpdateError(errorMsg);
-            } finally {
                 setIsUploading(false);
             }
         };
@@ -57,12 +59,17 @@ const ProfilePage = ({ user, setUser }) => {
 
                 <div className="profile-picture-section">
                     <div className={`profile-picture-large ${isUploading ? 'uploading' : ''}`}>
-                        {isUploading ? (
-                            <div className="upload-spinner"></div>
-                        ) : user.profilePicture ? (
-                            <img src={user.profilePicture} alt={user.username} />
+                        {isUploading && <div className="upload-spinner"></div>}
+                        {user.profilePicture ? (
+                            <img
+                                src={user.profilePicture}
+                                alt={user.username}
+                                onLoad={() => setIsUploading(false)}
+                                onError={() => setIsUploading(false)}
+                                style={isUploading ? { display: 'none' } : {}}
+                            />
                         ) : (
-                            <span>{user.username.charAt(0).toUpperCase()}</span>
+                            !isUploading && <span>{user.username.charAt(0).toUpperCase()}</span>
                         )}
                     </div>
                     <input

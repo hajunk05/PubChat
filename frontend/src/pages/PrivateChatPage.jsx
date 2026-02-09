@@ -14,7 +14,7 @@ const PrivateChatPage = ({ user }) => {
     const getOtherUsername = () => {
         if (!chat || !user) return '';
         return chat.creatorUsername === user.username
-            ? (chat.invitedUsername || chat.invitedEmail)
+            ? chat.invitedUsername
             : chat.creatorUsername;
     };
 

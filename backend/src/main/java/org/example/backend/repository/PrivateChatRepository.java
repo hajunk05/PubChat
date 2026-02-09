@@ -10,7 +10,6 @@ import java.util.List;
 public interface PrivateChatRepository extends MongoRepository<PrivateChat, String> {
   List<PrivateChat> findByCreatorUsername(String creatorUsername);
   List<PrivateChat> findByInvitedUsername(String invitedUsername);
-  List<PrivateChat> findByInvitedEmail(String invitedEmail);
   List<PrivateChat> findByCreatorUsernameAndStatus(String creatorUsername, String status);
   List<PrivateChat> findByInvitedUsernameAndStatus(String invitedUsername, String status);
   List<PrivateChat> findByCreatorUsernameAndInvitedUsername(String creatorUsername, String invitedUsername);

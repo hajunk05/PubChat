@@ -12,17 +12,15 @@ public class PrivateChat {
   private String id;
 
   private String creatorUsername;
-  private String invitedEmail;
   private String invitedUsername;
   private Date createdAt;
   private String status; // pending, accepted, declined
 
   public PrivateChat() {}
 
-  public PrivateChat(String id, String creatorUsername, String invitedEmail, String invitedUsername, Date createdAt) {
+  public PrivateChat(String id, String creatorUsername, String invitedUsername, Date createdAt) {
     this.id = id;
     this.creatorUsername = creatorUsername;
-    this.invitedEmail = invitedEmail;
     this.invitedUsername = invitedUsername;
     this.createdAt = createdAt;
   }
@@ -41,14 +39,6 @@ public class PrivateChat {
 
   public void setCreatorUsername(String creatorUsername) {
     this.creatorUsername = creatorUsername;
-  }
-
-  public String getInvitedEmail() {
-    return invitedEmail;
-  }
-
-  public void setInvitedEmail(String invitedEmail) {
-    this.invitedEmail = invitedEmail;
   }
 
   public String getInvitedUsername() {
