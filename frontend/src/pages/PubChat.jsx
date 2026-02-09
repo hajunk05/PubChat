@@ -78,14 +78,23 @@ const PubChat = ({ user, setUser }) => {
     return (
         <div className="pubchat-wrapper">
             <div className={`pubchat-layout ${user ? 'full-width' : ''}`}>
-                <ChatWindow
-                    user={user}
-                    messagesEndpoint="/api/messages"
-                    sendEndpoint="/api/messages"
-                    websocketTopic="/topic/messages"
-                    profilePictures={profilePictures}
-                    onNewMessage={fetchProfilePictures}
-                />
+                <div className="chat-container">
+                    {!user && (
+                        <div className="chat-overlay">
+                            <span>Sign up or log in to start chatting</span>
+                        </div>
+                    )}
+                    <div className={!user ? 'chat-blurred' : ''}>
+                        <ChatWindow
+                            user={user}
+                            messagesEndpoint="/api/messages"
+                            sendEndpoint="/api/messages"
+                            websocketTopic="/topic/messages"
+                            profilePictures={profilePictures}
+                            onNewMessage={fetchProfilePictures}
+                        />
+                    </div>
+                </div>
 
                 {!user && (
                     <div className="auth-section">
@@ -108,7 +117,7 @@ const PubChat = ({ user, setUser }) => {
                             <div className="auth-loading">Loading...</div>
                         ) : authMode === 'login' ? (
                             <form className="inline-auth-form" onSubmit={handleLogin}>
-                                <label>Username:<span className="required">*</span>
+                                <label>Username:
                                     <input
                                         type="text"
                                         value={authName}
@@ -116,7 +125,7 @@ const PubChat = ({ user, setUser }) => {
                                         required
                                     />
                                 </label>
-                                <label>Password:<span className="required">*</span>
+                                <label>Password:
                                     <input
                                         type="password"
                                         value={authPassword}
