@@ -55,6 +55,8 @@
     filter: blur(4px);
     pointer-events: none;
     user-select: none;
+    will-change: filter;
+    backface-visibility: hidden;
 }
 
 /* Auth Section (for non-logged-in users) */
